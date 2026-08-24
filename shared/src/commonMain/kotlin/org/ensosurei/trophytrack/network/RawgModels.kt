@@ -13,7 +13,7 @@ data class RawgGameDto(
 
 @Serializable
 data class GameSearchResponse(
-    val results : List<RawgGameDto>
+    val results : List<RawgGameDto> = emptyList()
 )
 
 @Serializable

@@ -16,4 +16,7 @@ interface GameNotesDao {
 
     @Query("DELETE FROM GameNotesEntity WHERE id= :id")
     suspend fun deleteNote(id: Int)
+
+    @Query("DELETE FROM GameNotesEntity WHERE gameId= :gameId")
+    suspend fun deleteNotesByGameId(gameId: Int)
 }

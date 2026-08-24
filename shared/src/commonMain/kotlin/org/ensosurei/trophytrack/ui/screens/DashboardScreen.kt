@@ -39,7 +39,6 @@ import kotlinx.coroutines.launch
 import org.ensosurei.trophytrack.AppContainer
 import org.ensosurei.trophytrack.database.GameEntity
 import org.ensosurei.trophytrack.ui.components.BarNavigation
-import org.ensosurei.trophytrack.ui.components.CategoryChip
 import org.ensosurei.trophytrack.ui.components.GameCard
 import org.ensosurei.trophytrack.ui.components.GameMiniCard
 import org.ensosurei.trophytrack.ui.components.GamesGrid
@@ -96,12 +95,6 @@ fun DashboardScreen(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ){
-                    IconButton(
-                        onClick = {}
-                    ){
-                        Icon(vectorResource(Res.drawable.ic_profile),
-                            contentDescription = null)
-                    }
                     Text(
                         text = "Home",
                         fontSize = 20.sp,
@@ -123,8 +116,7 @@ fun DashboardScreen(
                                 repository.searchAndSyncGames(searchQuery)
                             }
                         }
-                    },
-                    onFilterClick = {showFilters = !showFilters}
+                    }
                 )
                 if(searchQuery.isEmpty()){
                     LazyColumn(
@@ -132,24 +124,6 @@ fun DashboardScreen(
                         contentPadding = PaddingValues(bottom = 80.dp),
                         verticalArrangement = Arrangement.spacedBy(24.dp)
                     ){
-                        item {
-                            if(showFilters){
-                                LazyRow(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    contentPadding = PaddingValues(16.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ){
-                                    itemsIndexed(categories){ index, category ->
-                                        CategoryChip(
-                                            text = category,
-                                            isSelected = (selectedCategoryIndex == index),
-                                            onClick = {selectedCategoryIndex = index}
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
                         item{
                             Column {
                                 Text(
@@ -194,11 +168,6 @@ fun DashboardScreen(
                                         fontSize = 18.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = white
-                                    )
-                                    Text(
-                                        text = "See All",
-                                        fontSize = 18.sp,
-                                        color = gray
                                     )
                                 }
 

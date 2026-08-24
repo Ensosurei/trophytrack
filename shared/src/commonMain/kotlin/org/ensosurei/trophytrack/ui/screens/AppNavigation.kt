@@ -6,12 +6,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import org.ensosurei.trophytrack.AppContainer
 import org.ensosurei.trophytrack.database.GameEntity
@@ -22,6 +24,7 @@ fun AppNavigation(
     modifier: Modifier = Modifier
 ){
     val navController = rememberNavController()
+    val scope = rememberCoroutineScope()
     NavHost(
         navController = navController,
         startDestination = DashboardRoute,
@@ -65,7 +68,13 @@ fun AppNavigation(
                     onBackClick = { navController.popBackStack() },
                     onAddToLibrary = {navController.navigate(AddGameRoute(gameId = game.id))},
                     onEditGame = {navController.navigate(AddGameRoute(gameId = game.id))},
-                    onDelete = {navController.popBackStack()}
+                    onDelete = {
+                        scope.launch {
+                            container.db.gameDao().deleteGameById(game.id)
+                            container.db.gameNotesDao().deleteNotesByGameId(game.id)
+                            navController.popBackStack()
+                        }
+                    }
                 )
             }
         }

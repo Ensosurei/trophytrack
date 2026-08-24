@@ -77,7 +77,6 @@ fun AddGameScreen(
     var gameFromDb by remember { mutableStateOf<GameEntity?>(null) }
 
     var finalCover by remember { mutableStateOf("") }
-    var finalPlatforms by remember { mutableStateOf<String?>("") }
 
     val scope = rememberCoroutineScope()
     val launcher = rememberFilePickerLauncher(
@@ -101,13 +100,14 @@ fun AddGameScreen(
                 hoursText = game.hoursPlayed.toString()
                 selectedStatus = if(game.status == "NONE") "PLAYING" else game.status
                 finalCover = game.coverUrl
-                finalPlatforms = game.platforms
+                platformText = game.platforms ?: ""
             }
         }
     }
 
-    Column(
+    val isManualGame = isNewGame|| gameFromDb?.origin == "MANUAL"
 
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight()
@@ -116,15 +116,12 @@ fun AddGameScreen(
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
-    ){
+    ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(
-                onClick = onBack
-            ) {
+            IconButton(onClick = onBack) {
                 Icon(
                     imageVector = vectorResource(Res.drawable.ic_arrowBack),
                     contentDescription = null,
@@ -139,25 +136,26 @@ fun AddGameScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
-        if(finalCover.isNotEmpty()){
+        if (finalCover.isNotEmpty()) {
             Card(
                 modifier = Modifier
                     .width(180.dp)
                     .height(240.dp)
-                    .clickable{launcher.launch()},
+                    .then(
+                        if (isManualGame) Modifier.clickable { launcher.launch() } else Modifier
+                    ),
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
             ) {
                 AsyncImage(
                     model = finalCover,
-                    contentDescription = "New Local Cover",
+                    contentDescription = "Cover Image",
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxSize()
+                    modifier = Modifier.fillMaxSize()
                 )
             }
-        } else{
+        } else {
             Card(
                 modifier = Modifier
                     .width(180.dp)
@@ -168,7 +166,9 @@ fun AddGameScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(Color.DarkGray)
-                        .clickable { launcher.launch() },
+                        .then(
+                            if (isManualGame) Modifier.clickable { launcher.launch() } else Modifier
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(
@@ -180,7 +180,7 @@ fun AddGameScreen(
                             contentDescription = null
                         )
                         Text(
-                            "Upload Image",
+                            text = if (isManualGame) "Upload Image" else "No Cover",
                             color = white,
                             fontSize = 14.sp
                         )
@@ -189,70 +189,66 @@ fun AddGameScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         OutlinedTextField(
             value = titleText,
-            onValueChange = { if(isNewGame) titleText = it },
+            onValueChange = { if (isManualGame) titleText = it },
             label = { Text("Game title") },
-            enabled = isNewGame,
-            modifier = Modifier
-                .fillMaxWidth(),
+            enabled = isManualGame,
+            modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
-
         OutlinedTextField(
             value = hoursText,
-            onValueChange = {hoursText = it},
+            onValueChange = { hoursText = it },
             label = { Text("Played Hours") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )
 
-        if (isNewGame){
-            Text(
-                text = "Select Platforms",
-                color = white,
-                fontSize = 16.sp,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ){
-                val availablePlatforms = listOf("PC", "PS5", "Xbox Series", "Nintendo Switch", "Mobile")
-                availablePlatforms.forEach { platform ->
-                   val isSelected = platformText.contains(platform)
-                    Box(
-                        modifier = Modifier
-                            .background(color = if(isSelected) surfaceVariant else surfaceVariant.copy(alpha = 0.2f),
-                                shape = RoundedCornerShape(8.dp)
-                            )
-                            .clickable{
-                                if(isSelected){
-                                    platformText = platformText
-                                        .split(", ")
-                                        .filter { it != platform && it.isNotEmpty() }
-                                        .joinToString(", ")
-                                } else {
-                                    platformText = if(platformText.isEmpty()) platform else "$platformText, $platform"
+        if (isManualGame) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Select Platforms",
+                    color = white,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val availablePlatforms = listOf("PC", "PS5", "Xbox Series", "Nintendo Switch", "Mobile")
+                    availablePlatforms.forEach { platform ->
+                        val isSelected = platformText.contains(platform)
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    color = if (isSelected) surfaceVariant else surfaceVariant.copy(alpha = 0.2f),
+                                    shape = RoundedCornerShape(8.dp)
+                                )
+                                .clickable {
+                                    if (isSelected) {
+                                        platformText = platformText
+                                            .split(", ")
+                                            .filter { it != platform && it.isNotEmpty() }
+                                            .joinToString(", ")
+                                    } else {
+                                        platformText = if (platformText.isEmpty()) platform else "$platformText, $platform"
+                                    }
                                 }
-                            }
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        contentAlignment = Alignment.Center
-                    ){
-                        Text(
-                            text = platform,
-                            color = if(isSelected) white else white.copy(0.6f),
-                            fontSize = 14.sp
-                        )
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = platform,
+                                color = if (isSelected) white else white.copy(0.6f),
+                                fontSize = 12.sp
+                            )
+                        }
                     }
                 }
             }
@@ -266,28 +262,27 @@ fun AddGameScreen(
             )
         }
 
-        Text(
-            text = "Select a status",
-            style = MaterialTheme.typography.bodyMedium,
-            color = white,
-            modifier = Modifier
-                .fillMaxWidth()
-        )
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = "Select a status",
+                style = MaterialTheme.typography.bodyMedium,
+                color = white
+            )
 
-        Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-           val statuses = listOf("PLAYING", "COMPLETED")
-            statuses.forEach { status ->
-                CategoryChip(
-                    text = status,
-                    isSelected = selectedStatus == status,
-                    onClick = { selectedStatus = status }
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                val statuses = listOf("PLAYING", "COMPLETED")
+                statuses.forEach { status ->
+                    CategoryChip(
+                        text = status,
+                        isSelected = selectedStatus == status,
+                        onClick = { selectedStatus = status }
+                    )
+                }
             }
         }
 
@@ -295,7 +290,7 @@ fun AddGameScreen(
 
         Button(
             onClick = {
-                val hours = hoursText.toFloatOrNull() ?: 0f;
+                val hours = hoursText.toFloatOrNull() ?: 0f
                 val actualTime = Clock.System.now().toEpochMilliseconds()
                 val updateDate = if (isNewGame) actualTime else (gameFromDb?.addedAt ?: actualTime)
 
@@ -305,9 +300,9 @@ fun AddGameScreen(
                     title = titleText,
                     hoursPlayed = hours,
                     status = selectedStatus,
-                    platforms = finalPlatforms ?: "",
-                    origin = if (gameId == -1) "MANUAL" else (gameFromDb?.origin ?: "MANUAL"),
-                    externalId = if (gameId == -1) "" else (gameFromDb?.externalId ?: ""),
+                    platforms = platformText,
+                    origin = if (isNewGame) "MANUAL" else (gameFromDb?.origin ?: "MANUAL"),
+                    externalId = if (isNewGame) "" else (gameFromDb?.externalId ?: ""),
                     addedAt = updateDate,
                     updateAt = actualTime
                 )
@@ -327,6 +322,7 @@ fun AddGameScreen(
         ) {
             Text("Save Collection")
         }
+
         Spacer(modifier = Modifier.height(50.dp))
     }
 }

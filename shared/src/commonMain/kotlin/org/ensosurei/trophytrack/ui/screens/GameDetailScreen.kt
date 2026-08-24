@@ -15,11 +15,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Surface
@@ -31,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -53,6 +58,7 @@ import org.ensosurei.trophytrack.ui.theme.white
 import org.jetbrains.compose.resources.vectorResource
 import trophytrack.shared.generated.resources.Res
 import trophytrack.shared.generated.resources.ic_arrowBack
+import trophytrack.shared.generated.resources.ic_trash
 import kotlin.time.Instant
 
 @Composable
@@ -65,6 +71,7 @@ fun GameDetailScreen(
     onDelete: () -> Unit
 ){
     var selectedTab by remember { mutableIntStateOf(0) }
+    var showDeleteBottomSheet by remember { mutableStateOf(false) }
     val tabs = if(inInLibrary) listOf("Info", "Notes") else listOf("Info")
 
     Scaffold(
@@ -190,6 +197,17 @@ fun GameDetailScreen(
                             InfoRow("Status", game.status)
                             InfoRow("Added At", formatEpochMillis(game.addedAt))
                             InfoRow("Updated At", formatEpochMillis(game.updateAt))
+
+                            IconButton(
+                                onClick = { showDeleteBottomSheet = true}
+                            ){
+                                Icon(
+                                    imageVector = vectorResource(Res.drawable.ic_trash),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            }
+
                         }else{
                             Text(
                                 text = "This game is not part of your library",
@@ -213,6 +231,16 @@ fun GameDetailScreen(
                         )
                     }
                 }
+            }
+            if(showDeleteBottomSheet){
+                DeleteGameBottomSheet(
+                    gameTitle = game.title,
+                    onDismiss = { showDeleteBottomSheet = false },
+                    onConfirmDelete = {
+                        showDeleteBottomSheet = false
+                        onDelete()
+                    }
+                )
             }
         }
     }
@@ -254,5 +282,84 @@ fun formatEpochMillis(millis: Long): String {
         "$day/$month/$year $hour:$minute"
     } catch (e: Exception){
         "No available"
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DeleteGameBottomSheet(
+    gameTitle: String,
+    onDismiss: () -> Unit,
+    onConfirmDelete: () -> Unit
+){
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = surface,
+        contentColor = white
+    ){
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ){
+            Icon(
+                imageVector = vectorResource(Res.drawable.ic_trash),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.error,
+                modifier = Modifier.size(40.dp)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "Are you sure you want to delete $gameTitle?",
+                color = white,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "This action cannot be undone",
+                color = white.copy(0.6f),
+                fontSize = 14.sp
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Button(
+              onClick = onConfirmDelete,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = white
+                )
+            ){
+                Text(
+                    text = "Delete",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Button(
+                onClick = onDismiss,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = white
+                )
+            ){
+                Text(
+                    text = "Cancel",
+                )
+            }
+        }
     }
 }

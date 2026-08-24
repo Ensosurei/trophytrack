@@ -85,7 +85,14 @@ fun BarNavigation(
                                 },
                                 label = { Text("Home") }
                             )
+                        }
 
+                        Spacer(Modifier.width(72.dp))
+
+                        Row(
+                            modifier = Modifier
+                                .weight(1f)
+                        ) {
                             NavigationBarItem(
                                 selected = (currentStatus == 1),
                                 onClick = { onStatusChange(1) },
@@ -96,37 +103,6 @@ fun BarNavigation(
                                     )
                                 },
                                 label = { Text("Library") }
-                            )
-                        }
-
-                        Spacer(Modifier.width(72.dp))
-
-                        Row(
-                            modifier = Modifier
-                                .weight(1f)
-                        ) {
-                            NavigationBarItem(
-                                selected = (currentStatus == 2),
-                                onClick = { onStatusChange(2) },
-                                icon = {
-                                    Icon(
-                                        vectorResource(Res.drawable.ic_inbox),
-                                        contentDescription = "Notes"
-                                    )
-                                },
-                                label = { Text("Notes") }
-                            )
-
-                            NavigationBarItem(
-                                selected = (currentStatus == 3),
-                                onClick = { onStatusChange(3) },
-                                icon = {
-                                    Icon(
-                                        vectorResource(Res.drawable.ic_profile),
-                                        contentDescription = "Profile"
-                                    )
-                                },
-                                label = { Text("Profile") }
                             )
                         }
                     }

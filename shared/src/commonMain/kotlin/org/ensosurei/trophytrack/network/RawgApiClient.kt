@@ -16,6 +16,8 @@ class RawgApiClient {
             json(Json {
                 ignoreUnknownKeys = true
                 prettyPrint = true
+                coerceInputValues = true
+                isLenient = true
             })
         }
 
